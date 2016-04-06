@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>UST21-TIDAL_CURRENT</title>
+	<link rel="stylesheet" href="css/style.css">
+	<script src="http://localhost:9001/ws"></script>
+	<script src="libs/jquery-2.1.3.min.js"></script>
+	<script src="libs/three.min.js"></script>
+	<script src="libs/Detector.js"></script>
+	<script src="libs/stats.min.js"></script>
+	<script src="libs/DAT.GUI.min.js"></script>
+	<script src="libs/OrbitControls.js"></script>
+	<script src="libs/TrackballControls.js"></script>
+  </head>
+  <body>
+	<div id="container"></div>
+	<script type="text/javascript">
+	  $(function() {
+		if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+
+		var SCREEN_WIDTH = window.innerWidth, SCREEN_HEIGHT = window.innerHeight;
+		var VIEW_ANGLE = 45, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 0.1, FAR = 10000000;
+
+		var camera, controls;
+		var scene, renderer;
+		var continer, stats;
+		var arrowHelper;
+		var objCenter = new THREE.Vector3();
+		var axis = new THREE.Object3D();
+
+		webglInit();
+		animate();
+
+		function webglInit() {
+
+		  // camera
+		  camera = new THREE.PerspectiveCamera( VIEW_ANGLE, ASPECT, NEAR, FAR );
+
+		  // renderer
+		  renderer = new THREE.WebGLRenderer({ antialias: false });
+		  renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+
+		  // orbit control
+		  //controls = new THREE.OrbitControls( camera, renderer.domElement );
+
+		  // trackball control
+		  controls = new THREE.TrackballControls( camera );
+		  controls.rotateSpeed = 1.0;
+		  controls.zoomSpeed = 1.5;
+		  controls.panSpeed = 0.8;
+		  controls.noZoom = false;
+		  controls.noPan = false;
+		  controls.staticMoving = true;
+		  controls.dynamicDampingFactor = 0.2;
+		  console.log(controls);
+
+		  // scene, world
+		  scene = new THREE.Scene();
+
+		  // base map
+		  var mapMaterial = new THREE.MeshBasicMaterial({
+			wireframe:true
+		  	//side: THREE.DoubleSide,
+			//map:THREE.ImageUtils.loadTexture('img/bathy-C.jpg')
+		  });
+		  var loader = new THREE.JSONLoader();
+
+		  var createMesh = function(geometry) {
+			var mesh = new THREE.Mesh(geometry, mapMaterial);
+			scene.add(mesh);
+
+			objCenter = geometry.boundingSphere.center;
+			camera.position.set(objCenter.x+1000, objCenter.y-3000, objCenter.z+15000);
+
+			axis.position.add(objCenter);
+			scene.add(axis);
+			camera.lookAt(axis);
+
+			// orbit controls
+			//controls.center.add(objCenter);
+
+			// trackball controls
+			controls.target.add(objCenter);
+		  };
+		  loader.load("data/3djeju3.js", createMesh);
+
+		  // particle
+		  var particle, particles = new THREE.Geometry();
+		  var material = new THREE.PointCloudMaterial( {
+			size: 10,
+			transparent: true,
+			opacity: 0.7,
+			vertexColors: THREE.VertexColors
+		  });
+
+		  /*
+		  $.getJSON( "data/EBB_JJ_NS.json", function( data ) {
+		    for(var p= 0; p<data.length ; p++) {
+			  var pX = data[p].utmx, pY = data[p].utmy, pZ = data[p].depth;
+			  particle = new THREE.Vector3(Number(pX), Number(pY), Number(pZ)*10);
+			  particles.vertices.push(particle);
+			  var color = new THREE.Color();
+			  color.setHSL( Math.random(), 1.0, 0.5 );
+			  particles.colors.push(color);
+		    }
+		    var pointCloud = new THREE.PointCloud(particles, material);
+		    scene.add(pointCloud);
+		  });
+		  */
+
+		  // axis
+		  /*
+		  var axisHelper = new THREE.AxisHelper(5000);
+		  axis.add(axisHelper);
+		  */
+
+		  // container
+		  container = $('#container');
+		  container.append(renderer.domElement);
+
+		  // plug-in
+		  stats = new Stats();
+		  stats.domElement.style.position = 'absolute';
+		  stats.domElement.style.top = '0px';
+		  stats.domElement.style.zIndex = 100;
+		  container.append(stats.domElement);
+
+		  window.addEventListener('resize', onWindowResize, false);
+		}
+
+		function onWindowResize() {
+		  camera.aspect = window.innerWidth / window.innerHeight;
+		  camera.updateProjectionMatrix();
+
+		  renderer.setSize(window.innerWidth, window.innerHeight);
+		}
+
+		function animate() {
+		  requestAnimationFrame(animate);
+		  render();
+		  update();
+		}
+
+		function render() {
+		  renderer.render( scene, camera );
+		}
+
+		function update() {
+		  stats.update();
+	 	  controls.update();
+		  //console.log(camera.position);
+		  //camera.position.z += 100;
+		  //console.log(camera.position.z);
+		}
+	  });
+	</script>
+  </body>
+</html>

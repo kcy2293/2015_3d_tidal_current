@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>UST21-TIDAL_CURRENT</title>
+	<link rel="stylesheet" href="css/style.css">
+	<script src="http://localhost:9001/ws"></script>
+	<script src="libs/jquery-2.1.3.min.js"></script>
+	<script src="libs/three.min.js"></script>
+	<script src="libs/Detector.js"></script>
+	<script src="libs/stats.min.js"></script>
+	<script src="libs/DAT.GUI.min.js"></script>
+	<script src="libs/OrbitControls.js"></script>
+  </head>
+  <body>
+	<div id="container"></div>
+	<script type="text/javascript">
+	  $(function() {
+		if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+
+		var SCREEN_WIDTH = window.innerWidth, SCREEN_HEIGHT = window.innerHeight;
+		var VIEW_ANGLE = 45, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 0.1, FAR = 10000;
+
+		var camera, controls;
+		var scene, renderer;
+		var continer, stats;
+
+		var jsonFileList = [];
+
+		var pointCloud, particleCount, particles;
+		var arrows = [];
+		var arrowHelper, aw2;
+
+		webglInit();
+		animate();
+
+		function webglInit() {
+
+		  // camera
+		  camera = new THREE.PerspectiveCamera( VIEW_ANGLE, ASPECT, NEAR, FAR );
+		  camera.position.z = 500;
+
+		  // renderer
+		  renderer = new THREE.WebGLRenderer({ antialias: false });
+		  renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+
+		  // control
+		  controls = new THREE.OrbitControls( camera, renderer.domElement );
+
+		  // scene, world
+		  scene = new THREE.Scene();
+
+		  var imgUtil = THREE.ImageUtils;
+		  imgUtil.crossOrigin = true;
+
+		  particleCount = 1800;
+		  particles = new THREE.Geometry();
+		  var   pMaterial = new THREE.PointCloudMaterial({
+				color: 0xFFFFFF,
+				size:20,
+				map: imgUtil.loadTexture(
+				  "img/particle.png"
+				),
+				blending: THREE.AdditiveBlending,
+				transparent: true
+			  });
+
+		  for (var p = 0 ; p < particleCount ; p++) {
+			var pX = Math.random() * 500 - 250,
+			    pY = Math.random() * 500 - 250,
+				pZ = Math.random() * 500 - 250,
+				particle = new THREE.Vector3(pX, pY, pZ);
+
+			particle.velocity = new THREE.Vector3(0, -Math.random(), 0);
+			particles.vertices.push(particle);
+		  }
+		  console.log(particles.vertices[0]);
+
+		  pointCloud = new THREE.PointCloud(particles, pMaterial);
+		  pointCloud.sortParticles = true;
+		  scene.add(pointCloud);
+
+		  // add to container
+		  container = $('#container');
+		  container.append(renderer.domElement);
+
+		  // plug-in
+		  stats = new Stats();
+		  stats.domElement.style.position = 'absolute';
+		  stats.domElement.style.top = '0px';
+		  stats.domElement.style.zIndex = 100;
+		  container.append(stats.domElement);
+
+		  window.addEventListener('resize', onWindowResize, false);
+		}
+
+		function onWindowResize() {
+		  camera.aspect = window.innerWidth / window.innerHeight;
+		  camera.updateProjectionMatrix();
+
+		  renderer.setSize(window.innerWidth, window.innerHeight);
+		}
+
+		function animate() {
+		  requestAnimationFrame(animate);
+		  render();
+		  update();
+		}
+
+		function render() {
+		  renderer.render( scene, camera );
+		}
+
+		function update() {
+		  stats.update();
+	 	  controls.update();
+		  pointCloud.rotation.y += 0.01;
+
+		  var pCount = particleCount;
+		  while (pCount--) {
+			var particle = particles.vertices[pCount];
+
+			if (particle.y < -200) {
+			  particle.y = 200;
+			  particle.velocity.y = 0;
+			}
+
+			particle.velocity.y -= Math.random() * 0.1;
+		  }
+		  pointCloud.geometry.__dirtyVertices = true;
+		}
+	  });
+	</script>
+  </body>
+</html>

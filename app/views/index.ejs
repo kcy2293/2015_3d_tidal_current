@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>DoIt</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+	<div class="wrap">
+	  <ul id="fileList" style="font-size:1.5em">
+	  </ul>
+	</div>
+	<script src="/javascripts/jquery-2.1.1.min.js"></script>
+	<script type="text/javascript">
+	  var files = '<%=files%>';
+	  files = files.split(',');
+	  
+	  var ulTag = $('#fileList');
+	  files.forEach(function(name, idx) {
+		  ulTag.append("<a href='"+name+"'><li>"+name+"</li></a>");
+	  });
+	</script>
+  </body>
+</html>

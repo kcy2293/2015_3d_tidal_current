@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>UST21-TIDAL_CURRENT</title>
+	<link rel="stylesheet" href="css/style.css">
+	<script src="http://localhost:9001/ws"></script>
+	<script src="libs/jquery-2.1.3.min.js"></script>
+	<script src="libs/three.min.js"></script>
+	<script src="libs/Detector.js"></script>
+	<script src="libs/stats.min.js"></script>
+	<script src="libs/DAT.GUI.min.js"></script>
+	<script src="libs/OrbitControls.js"></script>
+  </head>
+  <body>
+	<div id="container"></div>
+	<script type="text/javascript">
+	  $(function() {
+		if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+
+		var SCREEN_WIDTH = window.innerWidth, SCREEN_HEIGHT = window.innerHeight;
+		var VIEW_ANGLE = 45, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 0.1, FAR = 10000;
+
+		var camera, controls;
+		var scene, renderer;
+		var continer, stats;
+		var parent, mesh1;
+
+		webglInit();
+		animate();
+
+		function webglInit() {
+
+		  // camera
+		  camera = new THREE.PerspectiveCamera( VIEW_ANGLE, ASPECT, NEAR, FAR );
+		  camera.position.set( 0, 5, 20 );
+
+		  // renderer
+		  renderer = new THREE.WebGLRenderer({ antialias: false });
+		  renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+
+		  // control
+		  controls = new THREE.OrbitControls( camera, renderer.domElement );
+
+		  // scene, world
+		  scene = new THREE.Scene();
+		  var geometry = new THREE.CubeGeometry(2, 2, 2);
+		  var material = new THREE.MeshBasicMaterial({
+			  color: 0xffffff,
+			  wireframe: true
+		  });
+
+		  parent = new THREE.Object3D();
+		  scene.add(parent);
+
+		  var pivot1 = new THREE.Object3D();
+		  var pivot2 = new THREE.Object3D();
+		  var pivot3 = new THREE.Object3D();
+		  pivot1.rotation.z = 0;
+		  pivot2.rotation.z = 2 * Math.PI / 3;
+		  pivot3.rotation.z = 4 * Math.PI / 3;
+		  parent.add(pivot1);
+		  parent.add(pivot2);
+		  parent.add(pivot3);
+
+		  mesh1 = new THREE.Mesh(geometry, material);
+		  var mesh2 = new THREE.Mesh(geometry, material);
+		  var mesh3 = new THREE.Mesh(geometry, material);
+		  mesh1.position.y = 5;
+		  mesh2.position.y = 5;
+		  mesh3.position.y = 5;
+		  pivot1.add(mesh1);
+		  pivot2.add(mesh2);
+		  pivot3.add(mesh3);
+
+		  console.log(parent);
+
+		  // axis
+		  var axisHelper = new THREE.AxisHelper(20);
+		  scene.add(axisHelper);
+
+		  // add to container
+		  container = $('#container');
+		  container.append(renderer.domElement);
+
+		  // plug-in
+		  stats = new Stats();
+		  stats.domElement.style.position = 'absolute';
+		  stats.domElement.style.top = '0px';
+		  stats.domElement.style.zIndex = 100;
+		  container.append(stats.domElement);
+
+		  window.addEventListener('resize', onWindowResize, false);
+		}
+
+		function onWindowResize() {
+		  camera.aspect = window.innerWidth / window.innerHeight;
+		  camera.updateProjectionMatrix();
+
+		  renderer.setSize(window.innerWidth, window.innerHeight);
+		}
+
+		function animate() {
+		  requestAnimationFrame(animate);
+		  render();
+		  update();
+		}
+
+		function render() {
+		  renderer.render( scene, camera );
+		}
+
+		var x = 0.5;
+
+		function update() {
+		  stats.update();
+	 	  controls.update();
+
+		  parent.rotation.z += 0.01;
+		  mesh1.position.y = 5+Math.sin(x);
+		  x += 0.1;
+		  console.log("x = " + x + ", y = " + mesh1.position.y);
+
+		  //arrowHelper.rotation.x += 0.01;
+		  //arrowHelper.rotation.y += 0.01;
+		  //arrowHelper.rotation.z += 0.01;
+
+		  ////aw2.rotation.x += 0.01;
+		  //aw2.rotation.y += 0.02;
+		}
+	  });
+	</script>
+  </body>
+</html>

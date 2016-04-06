@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>UST21-TIDAL_CURRENT</title>
+	<link rel="stylesheet" href="css/style.css">
+	<script src="libs/jquery-2.1.3.min.js"></script>
+	<script src="libs/three.min.js"></script>
+	<script src="libs/Detector.js"></script>
+	<script src="libs/stats.min.js"></script>
+	<script src="libs/DAT.GUI.min.js"></script>
+	<script src="libs/OrbitControls.js"></script>
+  </head>
+  <body>
+	<div id="container"></div>
+	<script type="text/javascript">
+	var initData;
+	  $(function() {
+		if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+
+		var SCREEN_WIDTH = window.innerWidth, SCREEN_HEIGHT = window.innerHeight;
+		var VIEW_ANGLE = 50, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 0.1, FAR = 10000;
+
+		var camera, controls, cameraHelper, cameraRig;
+		var scene, renderer;
+		var continer, stats;
+		var arrowHelper;
+		var deltaX, deltaY, maxX, maxY, minX, minY;
+		init();
+		animate();
+
+		function init() {
+
+		  // camera
+		  camera = new THREE.PerspectiveCamera( VIEW_ANGLE, 1, NEAR, FAR );
+		  camera.position.set(2280, -456, -106);
+//camera.position.set(0, 0, 0);
+		  // renderer
+		  renderer = new THREE.WebGLRenderer({ antialias: false });
+		  renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+
+		  // control
+		  controls = new THREE.OrbitControls( camera, renderer.domElement );
+
+		  // scene, world
+		  scene = new THREE.Scene();
+		  // axis
+		  var axisHelper = new THREE.AxisHelper(1000);
+		  scene.add(axisHelper);
+
+		  $.getJSON( "data/EBB_JJ_NS.json", function( data ) {
+		    initData = data;
+		    expressArrow(initData);
+		});
+		  container = $('#container');
+		  container.append(renderer.domElement);
+ 		
+		  // plug-in
+		  stats = new Stats();
+		  stats.domElement.style.position = 'absolute';
+		  stats.domElement.style.top = '0px';
+		  stats.domElement.style.zIndex = 100;
+		  container.append(stats.domElement);
+
+		  window.addEventListener('resize', onWindowResize, false);
+
+		}
+
+		function onWindowResize() {
+		  camera.aspect = window.innerWidth / window.innerHeight;
+		  camera.updateProjectionMatrix();
+
+		  renderer.setSize(window.innerWidth, window.innerHeight);
+
+		  controls.handleResize();
+
+		  render();
+		}
+
+		function animate() {
+		  requestAnimationFrame(animate);
+		  render();
+		  update();
+		}
+
+		function render() {
+			renderer.render( scene, camera );
+		}
+
+		function update() {
+		  stats.update();
+	 	  controls.update();
+		 // if (camera.position.x  > 10) camera.position.x -= 10;
+//if (camera.position.y  < -2000) camera.position.y -= 10;
+//if (camera.position.z  < 2000) camera.position.z -= 10;
+		  console.log(camera.position);
+		  //arrowHelper.rotation.y += 0.05;
+
+		}
+
+		function expressArrow(data){
+		    var dir; var org; var orgX; var orgY; var orgdepth;
+		    maxX = -9999; minX = 9999; maxY = -9999; minY = 9999;
+		    
+		    for (var x in data) {
+			
+			dir = new THREE.Vector3( Number(data[x].utmx)- 303000, Number(data[x].utmy) -3688000, data[x].depth * 10.0);
+			orgX = Number(data[x].utmx) + data[x].speed * Math.cos(90 - data[x].dir)- 303000 ;
+			orgY = Number(data[x].utmy) + data[x].speed * Math.sin(90 - data[x].dir) -3688000;			
+			org = new THREE.Vector3(orgX , orgY , data[x].depth * 10.0 );
+			
+console.log(orgX, orgY , data[x].depth * 10.0  );
+			if(maxX < data[x].utmx) maxX = data[x].utmx;
+			if(maxY < data[x].utmy ) maxY = data[x].utmy ;
+			if(minX > data[x].utmx) minX = data[x].utmx;
+			if(minY > data[x].utmy ) minY = data[x].utmy ;
+
+		        var length = data[x].speed /2;
+		        var hex = 0xffff00;
+			var headLen = 1 * data[x].speed/5;
+			var headWidth = 1 * data[x].speed/10;
+		        arrowHelper = new THREE.ArrowHelper(dir, org, length, hex, headLen,headWidth);
+			scene.add(arrowHelper);		
+		    }
+		    deltaX = maxX - minX; deltaY = maxY - minY;
+		}
+	  });
+	</script>
+  </body>
+</html>
+

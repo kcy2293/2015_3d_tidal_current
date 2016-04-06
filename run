@@ -1,0 +1,1 @@
+DEBUG=app ./app/bin/www
